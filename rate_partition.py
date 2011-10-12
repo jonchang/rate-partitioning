@@ -33,6 +33,9 @@ def get_args():
         the data into""", required=True, type=int)
     parser.add_argument('--output', help="""name of nexus file to output the
         clustered rates""", action=FullPaths, default="output.nex")
+    parser.add_argument("--rearrange-sites", help="""rearrange the sites in the
+        output nexus file so that clusters are contiguous partitions""",
+        action="store_true")
 
     return parser.parse_args()
 
@@ -105,12 +108,27 @@ def main():
 
     all_rates = get_rates(args.rates)
 
+    # Sort rates correctly
+    sorted_rates = collections.OrderedDict(sorted(all_rates.iteritems(),
+                                                  key=lambda x: int(x[0])))
+
     # Pull out values in the correct order
-    values = [all_rates[x] for x in sorted(all_rates.keys(), key=int)]
-    clusters = cluster(values, args.clusters)
+    clusters = cluster(sorted_rates.values(), args.clusters)
 
     # Write output data
     data = dendropy.DataSet.get_from_path(args.sites, 'nexus')
+    if args.rearrange_sites:
+        matrix = data.char_matrices[0]
+        # python lists start at 0
+        cluster_values = []
+        for x in clusters.itervalues():
+            for y in x:
+                cluster_values.append(y - 1)
+        getters = [operator.itemgetter(x) for x in cluster_values]
+        print '\n'.join([str(max(x)) for x in clusters.itervalues()])
+        for taxon, characters in matrix.iteritems():
+            new_order = [x(characters) for x in getters]
+            pdb.set_trace()
     data.write_to_path(args.output, "nexus", supplemental_blocks=[create_sets_block(clusters)])
 
 if __name__ == "__main__":
