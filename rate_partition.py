@@ -88,19 +88,24 @@ def cluster(values, num_clusters):
 
     return clusters
 
-def main():
-    args = get_args()
-
-    # Get rates from rates file
-    with open(args.rates, "rU") as rfile:
+def get_rates(filename):
+    """Gets site rates from a rate file `filename` and returns it as a dict"""
+    with open(filename, "rU") as rfile:
         dialect, header = guess_csv(rfile)
         csvreader = csv.reader(rfile, dialect=dialect)
         if header: # skip header row
             csvreader.next()
-        all_rates = {}
+        rates = {}
         for row in csvreader:
-            all_rates[row[0]] = float(row[1])
+            rates[row[0]] = float(row[1])
+        return rates
 
+def main():
+    args = get_args()
+
+    all_rates = get_rates(args.rates)
+
+    # Pull out values in the correct order
     values = [all_rates[x] for x in sorted(all_rates.keys(), key=int)]
     clusters = cluster(values, args.clusters)
 
