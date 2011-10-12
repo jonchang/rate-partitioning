@@ -59,8 +59,8 @@ def range_to_string(L):
     return ' '.join(['-'.join(x) for x in groups])
 
 def create_sets_block(sets):
-    """Creates a sets block. sets is a dictionary where keys are character set
-    names and values are a list of character indicies for that set."""
+    """Creates a sets block. `sets` is a dictionary where keys are character
+    set names and values are a list of character indicies for that set."""
     lines = []
     lines.append("begin sets;")
     for k, v in sets.iteritems():
@@ -69,7 +69,7 @@ def create_sets_block(sets):
     return "\n".join(lines)
 
 def cluster(values, num_clusters):
-    """Turn values into num_clusters clusters"""
+    """Turn `values` into `num_clusters` clusters"""
     value_range = max(values) - min(values)
     posts = [min(values)]
     for idx in range(1, num_clusters):
