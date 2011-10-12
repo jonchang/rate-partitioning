@@ -68,6 +68,26 @@ def create_sets_block(sets):
     lines.append("end;")
     return "\n".join(lines)
 
+def cluster(values, num_clusters):
+    """Turn values into num_clusters clusters"""
+    value_range = max(values) - min(values)
+    posts = [min(values)]
+    for idx in range(1, num_clusters):
+        posts.append(float(idx) / num_clusters * value_range)
+    posts.append(max(values))
+
+    obs = []
+    for idx, value in enumerate(posts, start=1):
+        if idx < len(posts):
+            obs.append(value + posts[idx] / 2)
+
+    centroids, labels = kmeans2(numpy.array(values), numpy.array(obs), minit="matrix")
+    clusters = collections.defaultdict(list)
+    for idx, label in enumerate(labels):
+        clusters[label].append(idx + 1) # sites start counting at 1
+
+    return clusters
+
 def main():
     args = get_args()
 
@@ -81,11 +101,8 @@ def main():
         for row in csvreader:
             all_rates[row[0]] = float(row[1])
 
-    # Cluster data with scipy
-    centroids, labels = kmeans2(numpy.array(all_rates.values()), args.clusters)
-    clusters = collections.defaultdict(list)
-    for idx, label in enumerate(labels):
-        clusters[label].append(idx + 1) # sites start counting at 1
+    values = [all_rates[x] for x in sorted(all_rates.keys(), key=int)]
+    clusters = cluster(values, args.clusters)
 
     # Write output data
     data = dendropy.DataSet.get_from_path(args.sites, 'nexus')
